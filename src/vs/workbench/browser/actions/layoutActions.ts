@@ -6,7 +6,7 @@
 import { ILocalizedString, localize, localize2 } from '../../../nls.js';
 import { MenuId, MenuRegistry, registerAction2, Action2 } from '../../../platform/actions/common/actions.js';
 import { Categories } from '../../../platform/action/common/actionCommonCategories.js';
-import { IConfigurationService } from '../../../platform/configuration/common/configuration.js';
+import { IConfigurationService, ConfigurationTarget } from '../../../platform/configuration/common/configuration.js';
 import { EditorActionsLocation, EditorTabsMode, IWorkbenchLayoutService, LayoutSettings, Parts, Position, ZenModeSettings, positionToString } from '../../services/layout/browser/layoutService.js';
 import { ServicesAccessor, IInstantiationService } from '../../../platform/instantiation/common/instantiation.js';
 import { KeyMod, KeyCode, KeyChord } from '../../../base/common/keyCodes.js';
@@ -32,6 +32,57 @@ import { mainWindow } from '../../../base/browser/window.js';
 import { IKeybindingService } from '../../../platform/keybinding/common/keybinding.js';
 import { TitlebarStyle } from '../../../platform/window/common/window.js';
 import { IPreferencesService } from '../../services/preferences/common/preferences.js';
+
+const FONT_SIZE_CHANGE = 1;
+
+registerAction2(class IncreaseEditorFontSizeAction extends Action2 {
+	constructor() {
+		super({
+			id: 'workbench.action.increaseEditorFontSize',
+			title: { value: localize('increaseEditorFontSize', "Increase Editor Font Size"), original: 'Increase Editor Font Size' },
+			category: Categories.View,
+			f1: true,
+			keybinding: {
+				weight: KeybindingWeight.WorkbenchContrib,
+				primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.Digit1
+			}
+		});
+	}
+
+	async run(accessor: ServicesAccessor): Promise<void> {
+		const configurationService = accessor.get(IConfigurationService);
+		const currentFontSize = configurationService.getValue<number>('editor.fontSize');
+
+		if (typeof currentFontSize === 'number') {
+			await configurationService.updateValue('editor.fontSize', currentFontSize + FONT_SIZE_CHANGE, ConfigurationTarget.USER);
+		}
+	}
+});
+
+registerAction2(class DecreaseEditorFontSizeAction extends Action2 {
+	constructor() {
+		super({
+			id: 'workbench.action.decreaseEditorFontSize',
+			title: { value: localize('decreaseEditorFontSize', "Decrease Editor Font Size"), original: 'Decrease Editor Font Size' },
+			category: Categories.View,
+			f1: true,
+			keybinding: {
+				weight: KeybindingWeight.WorkbenchContrib,
+				// Cmd+Shift+- on macOS, Ctrl+Shift+- on Windows/Linux
+				primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.Digit2
+			}
+		});
+	}
+
+	async run(accessor: ServicesAccessor): Promise<void> {
+		const configurationService = accessor.get(IConfigurationService);
+		const currentFontSize = configurationService.getValue<number>('editor.fontSize');
+
+		if (typeof currentFontSize === 'number' && currentFontSize > 1) {
+			await configurationService.updateValue('editor.fontSize', currentFontSize - FONT_SIZE_CHANGE, ConfigurationTarget.USER);
+		}
+	}
+});
 
 // Register Icons
 const menubarIcon = registerIcon('menuBar', Codicon.layoutMenubar, localize('menuBarIcon', "Represents the menu bar"));
@@ -379,7 +430,7 @@ MenuRegistry.appendMenuItems([
 	}, {
 		id: MenuId.LayoutControlMenu,
 		item: {
-			group: '0_workbench_toggles',
+			group: '2_pane_toggles',
 			command: {
 				id: ToggleSidebarVisibilityAction.ID,
 				title: localize('toggleSideBar', "Toggle Primary Side Bar"),
@@ -392,7 +443,7 @@ MenuRegistry.appendMenuItems([
 	}, {
 		id: MenuId.LayoutControlMenu,
 		item: {
-			group: '0_workbench_toggles',
+			group: '2_pane_toggles',
 			command: {
 				id: ToggleSidebarVisibilityAction.ID,
 				title: localize('toggleSideBar', "Toggle Primary Side Bar"),
@@ -1434,7 +1485,7 @@ registerAction2(class CustomizeLayoutAction extends Action2 {
 				{
 					id: MenuId.LayoutControlMenu,
 					when: ContextKeyExpr.equals('config.workbench.layoutControl.type', 'both'),
-					group: 'z_end'
+					group: '1_layout'
 				}
 			]
 		});

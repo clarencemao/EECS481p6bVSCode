@@ -1982,26 +1982,49 @@ export class Repository implements Disposable {
 
 	async ignore(files: Uri[]): Promise<void> {
 		return await this.run(Operation.Ignore, async () => {
-			const ignoreFile = `${this.repository.root}${path.sep}.gitignore`;
-			const textToAppend = files
-				.map(uri => relativePath(this.repository.root, uri.fsPath)
-					.replace(/\\|\[/g, match => match === '\\' ? '/' : `\\${match}`))
-				.join('\n');
+			for (const file of files) {
+				// Find the nearest .gitignore for the current file
+				const ignoreFile = await this.findNearestGitignore(file.fsPath);
+				const textToAppend = relativePath(path.dirname(ignoreFile), file.fsPath)
+					.replace(/\\|\[/g, match => (match === '\\' ? '/' : `\\${match}`));
 
-			const document = await new Promise(c => fs.exists(ignoreFile, c))
-				? await workspace.openTextDocument(ignoreFile)
-				: await workspace.openTextDocument(Uri.file(ignoreFile).with({ scheme: 'untitled' }));
+				// Open or create the .gitignore file
+				const document = await new Promise(c => fs.exists(ignoreFile, c))
+					? await workspace.openTextDocument(ignoreFile)
+					: await workspace.openTextDocument(Uri.file(ignoreFile).with({ scheme: 'untitled' }));
 
-			await window.showTextDocument(document);
+				await window.showTextDocument(document);
 
-			const edit = new WorkspaceEdit();
-			const lastLine = document.lineAt(document.lineCount - 1);
-			const text = lastLine.isEmptyOrWhitespace ? `${textToAppend}\n` : `\n${textToAppend}\n`;
+				// Append the ignored path to the .gitignore file
+				const edit = new WorkspaceEdit();
+				const lastLine = document.lineAt(document.lineCount - 1);
+				const text = lastLine.isEmptyOrWhitespace ? `${textToAppend}\n` : `\n${textToAppend}\n`;
 
-			edit.insert(document.uri, lastLine.range.end, text);
-			await workspace.applyEdit(edit);
-			await document.save();
+				edit.insert(document.uri, lastLine.range.end, text);
+				await workspace.applyEdit(edit);
+				await document.save();
+			}
 		});
+	}
+
+	// Helper function to find the nearest .gitignore
+	private async findNearestGitignore(filePath: string): Promise<string> {
+		let currentDir = path.dirname(filePath);
+
+		while (currentDir) {
+			const gitignorePath = path.join(currentDir, '.gitignore');
+			if (fs.existsSync(gitignorePath)) {
+				return gitignorePath;
+			}
+			const parentDir = path.dirname(currentDir);
+			if (parentDir === currentDir) {
+				break; // Reached the filesystem root
+			}
+			currentDir = parentDir;
+		}
+
+		// Default to the root .gitignore if no local .gitignore is found
+		return `${this.repository.root}${path.sep}.gitignore`;
 	}
 
 	async rebaseAbort(): Promise<void> {

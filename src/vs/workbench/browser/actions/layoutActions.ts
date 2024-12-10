@@ -35,7 +35,7 @@ import { IPreferencesService } from '../../services/preferences/common/preferenc
 
 const FONT_SIZE_CHANGE = 1;
 
-registerAction2(class IncreaseEditorFontSizeAction extends Action2 {
+export class IncreaseEditorFontSizeAction extends Action2 {
 	constructor() {
 		super({
 			id: 'workbench.action.increaseEditorFontSize',
@@ -51,15 +51,16 @@ registerAction2(class IncreaseEditorFontSizeAction extends Action2 {
 
 	async run(accessor: ServicesAccessor): Promise<void> {
 		const configurationService = accessor.get(IConfigurationService);
-		const currentFontSize = configurationService.getValue<number>('editor.fontSize');
+		const currentFontSize = configurationService.getValue('editor.fontSize') as number;
 
 		if (typeof currentFontSize === 'number') {
 			await configurationService.updateValue('editor.fontSize', currentFontSize + FONT_SIZE_CHANGE, ConfigurationTarget.USER);
 		}
 	}
-});
+}
+registerAction2(IncreaseEditorFontSizeAction);
 
-registerAction2(class DecreaseEditorFontSizeAction extends Action2 {
+export class DecreaseEditorFontSizeAction extends Action2 {
 	constructor() {
 		super({
 			id: 'workbench.action.decreaseEditorFontSize',
@@ -68,7 +69,6 @@ registerAction2(class DecreaseEditorFontSizeAction extends Action2 {
 			f1: true,
 			keybinding: {
 				weight: KeybindingWeight.WorkbenchContrib,
-				// Cmd+Shift+- on macOS, Ctrl+Shift+- on Windows/Linux
 				primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.Digit2
 			}
 		});
@@ -76,13 +76,14 @@ registerAction2(class DecreaseEditorFontSizeAction extends Action2 {
 
 	async run(accessor: ServicesAccessor): Promise<void> {
 		const configurationService = accessor.get(IConfigurationService);
-		const currentFontSize = configurationService.getValue<number>('editor.fontSize');
+		const currentFontSize = configurationService.getValue('editor.fontSize') as number;
 
 		if (typeof currentFontSize === 'number' && currentFontSize > 1) {
 			await configurationService.updateValue('editor.fontSize', currentFontSize - FONT_SIZE_CHANGE, ConfigurationTarget.USER);
 		}
 	}
-});
+}
+registerAction2(DecreaseEditorFontSizeAction);
 
 // Register Icons
 const menubarIcon = registerIcon('menuBar', Codicon.layoutMenubar, localize('menuBarIcon', "Represents the menu bar"));

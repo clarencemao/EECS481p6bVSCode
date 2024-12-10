@@ -72,55 +72,6 @@ suite('Notebook Layout Actions', () => {
 	test('Toggle Cell Toolbar Position', async function () {
 		const action = new ToggleCellToolbarPositionAction();
 
-		assert.deepStrictEqual(action.togglePosition('test-nb', 'right'), {
-			default: 'right',
-			'test-nb': 'left'
-		});
-
-		assert.deepStrictEqual(action.togglePosition('test-nb', 'left'), {
-			default: 'left',
-			'test-nb': 'right'
-		});
-
-		assert.deepStrictEqual(action.togglePosition('test-nb', 'hidden'), {
-			default: 'hidden',
-			'test-nb': 'right'
-		});
-
-		assert.deepStrictEqual(action.togglePosition('test-nb', ''), {
-			default: 'right',
-			'test-nb': 'left'
-		});
-
-		assert.deepStrictEqual(action.togglePosition('test-nb', {
-			default: 'right'
-		}), {
-			default: 'right',
-			'test-nb': 'left'
-		});
-
-		assert.deepStrictEqual(action.togglePosition('test-nb', {
-			default: 'left'
-		}), {
-			default: 'left',
-			'test-nb': 'right'
-		});
-
-		assert.deepStrictEqual(action.togglePosition('test-nb', {
-			default: 'hidden'
-		}), {
-			default: 'hidden',
-			'test-nb': 'right'
-		});
-	});
-});
-
-suite('Notebook Layout Actions', () => {
-	ensureNoDisposablesAreLeakedInTestSuite();
-
-	test('Toggle Cell Toolbar Position', async function () {
-		const action = new ToggleCellToolbarPositionAction();
-
 		// "notebook.cellToolbarLocation": "right"
 		assert.deepStrictEqual(action.togglePosition('test-nb', 'right'), {
 			default: 'right',
